@@ -1,73 +1,78 @@
-# Welcome to your Lovable project
+# AquaSense: Interactive Water Pollution Dashboard
 
-## Project info
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+![Scikit-Learn](https://img.shields.io/badge/scikit_learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=Leaflet&logoColor=white)
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+AquaSense is an AI-powered, full-stack water quality monitoring and prediction platform. It leverages a rigorous Machine Learning architecture combined with Groq-powered Generative AI to provide real-time potability assessments and comprehensive environmental insights based on standard water parameter tests. 
 
-## How can I edit this code?
+## ✨ Key Features
+- **Real-Time ML Predictions**: Upload water parameters (pH, Turbidity, Solids, etc.) to evaluate potability using a customized Scikit-Learn Random Forest Classifier.
+- **AI Expert Analysis**: Integrates the `llama-3.3-70b-versatile` language model via the Groq API to provide deep, conversational scientific insights into water safety thresholds. 
+- **Interactive Geospatial Monitoring**: Interactive Leaflet maps natively display the water quality statuses of 30 authentic Indian geographic coordinates (e.g., Dal Lake, Yamuna, Godavari). 
+- **Complex Analytical Dashboard**: Data-rich interactive visualizations powered by Recharts (Radar, Area, Bar, and Line charts) modeling real Indian river contamination indices over time.
 
-There are several ways of editing your application.
+## 🛠️ Technology Stack
+- **Frontend Core**: React 18 / TypeScript / Vite
+- **UI & Styling**: Tailwind CSS, Framer Motion, Shadcn UI Components
+- **Data Visualization**: Recharts, Leaflet Maps
+- **Backend Architecture**: Python 3.12, Flask, Flask-CORS 
+- **Machine Learning**: Pandas, Scikit-Learn, Joblib
+- **Generative AI**: Groq Cloud API, Python Requests Integration
+- **Infrastructure**: Vercel Serverless Architecture
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🚀 Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+To run this platform locally on your own machine:
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+### 1. Backend Server Setup
+Navigate into the backend folder, install all python requirements, and start the Flask API.
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+cd backend
+pip install -r requirements.txt
 ```
 
-**Edit a file directly in GitHub**
+**Note**: Create a `.env` file inside the `backend` folder and add your Groq Token:
+```env
+GROQ_API_KEY=your_secure_api_token
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+To run the Flask endpoints manually:
+```sh
+python app.py
+```
+*The endpoint will boot on `localhost:5000/predict`.*
 
-**Use GitHub Codespaces**
+### 2. Frontend Development Server
+In a new terminal window at the project root:
+```sh
+npm install
+npm run dev
+```
+*The frontend will launch natively on `localhost:5173`.*
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## ☁️ Deployment Instructions (Vercel)
+This application is purposefully structured for deployment onto Vercel. 
 
-This project is built with:
+The `vercel.json` file configures the Vercel architecture to host the React UI as **Static Assets** and uses the `backend/index.py` WSGI as a secure **Serverless Function** environment to run the Flask ML pipeline.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Ensure the `.env` file is excluded from your git index (it is set in `.gitignore`).
+2. Push your code to your remote GitHub repository (`main` branch).
+3. Import the repository into the [Vercel Dashboard](https://vercel.com/new).
+4. Inject your `GROQ_API_KEY` into Vercel's **Environment Variables** configuration tab.
+5. Deploy securely!
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 🧠 Machine Learning Engine 
 
-## Can I connect a custom domain to my Lovable project?
+AquaSense uses a **Random Forest Classifier** trained on 3,000+ localized water potability data points encompassing 9 distinct chemical parameters:
+- `pH`, `Hardness`, `Solids`, `Chloramines`, `Sulfate`, `Conductivity`, `Organic_carbon`, `Trihalomethanes`, `Turbidity`.
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Missing values are programmatically imputed during inference runtime and output predictions dynamically render probability bounds and accuracy tolerances directly into the UI.
