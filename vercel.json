@@ -19,6 +19,9 @@
       "dest": "backend/index.py"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html"
     }
