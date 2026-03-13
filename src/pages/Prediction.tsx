@@ -42,7 +42,9 @@ const Prediction = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:5000/predict", {
+      // Use Vite's import.meta.env.DEV to determine the environment
+      const baseUrl = import.meta.env.DEV ? "http://localhost:5000" : "/api";
+      const response = await fetch(`${baseUrl}/predict`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
