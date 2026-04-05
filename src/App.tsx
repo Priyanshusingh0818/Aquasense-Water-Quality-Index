@@ -6,10 +6,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Prediction from "./pages/Prediction";
-import PollutionMap from "./pages/PollutionMap";
-import Analytics from "./pages/Analytics";
-import HistoricalData from "./pages/HistoricalData";
-import Alerts from "./pages/Alerts";
+import Recommendations from "./pages/Recommendations";
+import Simulation from "./pages/Simulation";
+import ModelComparison from "./pages/ModelComparison";
+import AnomalyDetection from "./pages/AnomalyDetection";
+import DataDrift from "./pages/DataDrift";
 import DashboardLayout from "./layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -26,10 +27,11 @@ const App = () => (
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/prediction" element={<Prediction />} />
-            <Route path="/map" element={<PollutionMap />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/history" element={<HistoricalData />} />
-            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/simulation" element={<Simulation />} />
+            <Route path="/recommendations" element={<Recommendations />} />
+            <Route path="/models" element={<ModelComparison />} />
+            <Route path="/anomalies" element={<AnomalyDetection />} />
+            <Route path="/drift" element={<DataDrift />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

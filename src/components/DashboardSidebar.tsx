@@ -1,17 +1,18 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Droplets, Map, BarChart3, Clock, Bell, FileText, Settings, Waves, LogOut, ChevronLeft, ChevronRight
+  LayoutDashboard, Droplets, FlaskConical, ClipboardList, GitMerge, ScanSearch, ActivitySquare, Waves, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navItems = [
-  { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-  { title: "Water Quality", path: "/prediction", icon: Droplets },
-  { title: "Pollution Map", path: "/map", icon: Map },
-  { title: "Analytics", path: "/analytics", icon: BarChart3 },
-  { title: "Historical Data", path: "/history", icon: Clock },
-  { title: "Alerts", path: "/alerts", icon: Bell },
+  { title: "Dashboard",       path: "/dashboard",        icon: LayoutDashboard },
+  { title: "Prediction",      path: "/prediction",       icon: Droplets },
+  { title: "Simulation",      path: "/simulation",       icon: FlaskConical },
+  { title: "Recommendations", path: "/recommendations",  icon: ClipboardList },
+  { title: "Model Insights",  path: "/models",           icon: GitMerge },
+  { title: "Anomaly Detect",  path: "/anomalies",        icon: ScanSearch },
+  { title: "Drift Monitor",   path: "/drift",            icon: ActivitySquare },
 ];
 
 const DashboardSidebar = () => {

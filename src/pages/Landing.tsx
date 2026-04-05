@@ -12,10 +12,10 @@ const features = [
 ];
 
 const stats = [
-  { value: 12847, label: "Water Samples Analyzed", suffix: "+" },
-  { value: 342, label: "Pollution Alerts Generated", suffix: "" },
-  { value: 156, label: "Active Monitoring Stations", suffix: "" },
-  { value: 99.2, label: "System Uptime", suffix: "%", decimals: 1 },
+  { value: 3276,  label: "Water Samples in Dataset",     suffix: "",  decimals: 0 },
+  { value: 39.1,  label: "Samples Safe for Drinking",    suffix: "%", decimals: 1 },
+  { value: 9,     label: "Water Parameters Analyzed",    suffix: "",  decimals: 0 },
+  { value: 8,     label: "WHO Thresholds Monitored",     suffix: "",  decimals: 0 },
 ];
 
 const Landing = () => {

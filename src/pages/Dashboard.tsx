@@ -1,144 +1,182 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import MetricCard from "@/components/MetricCard";
-import { Droplets, Radio, AlertTriangle, Activity } from "lucide-react";
+import { Droplets, ShieldCheck, ShieldX, Percent } from "lucide-react";
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
+  BarChart, Bar, AreaChart, Area, PieChart, Pie, Cell,
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend
+  ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from "recharts";
 
-const wqiData = [
-  { month: "Jan", wqi: 72 }, { month: "Feb", wqi: 68 }, { month: "Mar", wqi: 75 },
-  { month: "Apr", wqi: 71 }, { month: "May", wqi: 78 }, { month: "Jun", wqi: 82 },
-  { month: "Jul", wqi: 79 }, { month: "Aug", wqi: 74 }, { month: "Sep", wqi: 80 },
-  { month: "Oct", wqi: 85 }, { month: "Nov", wqi: 83 }, { month: "Dec", wqi: 88 },
-];
+const BASE_URL = import.meta.env.DEV ? "http://localhost:5000" : "/api";
+const C = { safe: "#2ECC71", unsafe: "#EF4444", blue: "#0EA5E9", amber: "#F59E0B" };
 
-const locationData = [
-  { location: "Ganga", level: 65 }, { location: "Yamuna", level: 82 },
-  { location: "Godavari", level: 48 }, { location: "Narmada", level: 35 },
-  { location: "Krishna", level: 52 }, { location: "Kaveri", level: 45 },
-];
+type ParamStat = { mean: number; std: number; min: number; max: number; safe_mean: number; unsafe_mean: number };
+interface DashData {
+  summary: { total: number; safe: number; unsafe: number; safe_percent: number; unsafe_percent: number; parameter_stats: Record<string, ParamStat> };
+  featureImportances: { param: string; importance: number }[];
+  radarData: { param: string; safe: number; unsafe: number; fullMark: number }[];
+  phDistribution: { labels: number[]; safe: number[]; unsafe: number[] };
+  turbidityDistribution: { labels: number[]; safe: number[]; unsafe: number[] };
+}
 
-const pollutionTypes = [
-  { name: "Chemical", value: 35, color: "#0EA5E9" },
-  { name: "Biological", value: 40, color: "#2ECC71" },
-  { name: "Industrial", value: 25, color: "#F59E0B" },
-];
+const tooltipStyle = { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem", fontSize: 12 };
 
-const trendData = [
-  { day: "Mon", value: 32 }, { day: "Tue", value: 45 }, { day: "Wed", value: 38 },
-  { day: "Thu", value: 52 }, { day: "Fri", value: 41 }, { day: "Sat", value: 35 },
-  { day: "Sun", value: 28 },
-];
-
-const radarData = [
-  { param: "pH", A: 78, fullMark: 100 },
-  { param: "Hardness", A: 65, fullMark: 100 },
-  { param: "Solids", A: 85, fullMark: 100 },
-  { param: "Chloramines", A: 62, fullMark: 100 },
-  { param: "Sulfate", A: 50, fullMark: 100 },
-  { param: "Conductivity", A: 45, fullMark: 100 },
-];
+const Skeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    {[1, 2, 3, 4].map(i => <div key={i} className="glass-card p-6 h-36 animate-pulse bg-muted/40 rounded-xl" />)}
+  </div>
+);
 
 const Dashboard = () => {
+  const [data, setData]     = useState<DashData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`${BASE_URL}/dashboard-data`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(d => { setData(d); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-display font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Real-time water quality monitoring overview</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          {data ? `Water quality overview — ${data.summary.total.toLocaleString()} real samples analyzed` : "Loading water quality data…"}
+        </p>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Water Quality Index" value="82.4" change={5.2} icon={Droplets} sparkData={[72, 68, 75, 71, 78, 82, 79, 74, 80, 85, 83, 88]} color="#2ECC71" />
-        <MetricCard title="Active Stations" value="156" change={3.1} icon={Radio} sparkData={[140, 142, 148, 150, 152, 155, 153, 156]} color="#0EA5E9" />
-        <MetricCard title="Alerts Today" value="12" change={-8.5} icon={AlertTriangle} sparkData={[18, 15, 20, 14, 16, 13, 12]} color="#F59E0B" />
-        <MetricCard title="Avg Pollution" value="34.2" change={-12.3} icon={Activity} sparkData={[45, 42, 40, 38, 36, 35, 34]} color="#22C55E" />
-      </div>
-
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Line Chart */}
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-foreground mb-4">Water Quality Index Over Time</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={wqiData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem", fontSize: 13 }} />
-              <Line type="monotone" dataKey="wqi" stroke="#2ECC71" strokeWidth={3} dot={{ fill: "#2ECC71", r: 4 }} activeDot={{ r: 6 }} />
-            </LineChart>
-          </ResponsiveContainer>
+      {loading && <Skeleton />}
+      {error && (
+        <div className="glass-card p-6 border-danger/30 border text-sm text-danger">
+          ⚠ Could not load dashboard data. Ensure the backend is running at {BASE_URL}.
+          <p className="font-mono text-xs mt-1">{error}</p>
         </div>
+      )}
 
-        {/* Bar Chart */}
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-foreground mb-4">Pollution Levels by Location</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={locationData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="location" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem", fontSize: 13 }} />
-              <Bar dataKey="level" fill="#0EA5E9" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {data && (() => {
+        const { summary, featureImportances, radarData, phDistribution, turbidityDistribution } = data;
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Pie Chart */}
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-foreground mb-4">Pollution Distribution</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <PieChart>
-              <Pie data={pollutionTypes} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={5} dataKey="value">
-                {pollutionTypes.map((entry, i) => (
-                  <Cell key={i} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem", fontSize: 13 }} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        const pieData = [
+          { name: "Safe",   value: summary.safe,   color: C.safe },
+          { name: "Unsafe", value: summary.unsafe, color: C.unsafe },
+        ];
 
-        {/* Area Chart */}
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-foreground mb-4">Contamination Trend</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={trendData}>
-              <defs>
-                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0EA5E9" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#0EA5E9" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem", fontSize: 13 }} />
-              <Area type="monotone" dataKey="value" stroke="#0EA5E9" strokeWidth={2} fill="url(#areaGrad)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
+        const phChart = phDistribution.labels.map((l, i) => ({
+          ph: l, Safe: phDistribution.safe[i], Unsafe: phDistribution.unsafe[i],
+        }));
 
-        {/* Radar Chart */}
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-foreground mb-4">Parameter Analysis</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <RadarChart data={radarData}>
-              <PolarGrid stroke="hsl(var(--border))" />
-              <PolarAngleAxis dataKey="param" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-              <PolarRadiusAxis stroke="hsl(var(--border))" fontSize={10} />
-              <Radar dataKey="A" stroke="#2ECC71" fill="#2ECC71" fillOpacity={0.2} strokeWidth={2} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+        const turbChart = turbidityDistribution.labels.map((l, i) => ({
+          turbidity: l, Safe: turbidityDistribution.safe[i], Unsafe: turbidityDistribution.unsafe[i],
+        }));
+
+        const sparkPh   = phDistribution.safe.map((s, i) => s + phDistribution.unsafe[i]);
+        const sparkSafe = phDistribution.safe;
+        const sparkUnsf = phDistribution.unsafe;
+
+        return (
+          <>
+            {/* Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard title="Total Samples"  value={summary.total.toLocaleString()}   change={0}                        icon={Droplets}    sparkData={sparkPh}   color={C.blue}  />
+              <MetricCard title="Safe Samples"   value={summary.safe.toLocaleString()}    change={summary.safe_percent}     icon={ShieldCheck} sparkData={sparkSafe} color={C.safe}  />
+              <MetricCard title="Unsafe Samples" value={summary.unsafe.toLocaleString()}  change={-summary.unsafe_percent}  icon={ShieldX}     sparkData={sparkUnsf} color={C.unsafe}/>
+              <MetricCard title="Safety Rate"    value={`${summary.safe_percent}%`}       change={summary.safe_percent - 50} icon={Percent}   sparkData={radarData.map(r => r.safe)} color={C.amber} />
+            </div>
+
+            {/* Row 1 — pH Distribution + Safe/Unsafe Pie */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6">
+                <h3 className="font-display font-semibold text-foreground mb-1">pH Level Distribution</h3>
+                <p className="text-xs text-muted-foreground mb-4">Safe vs Unsafe sample counts across pH value ranges</p>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={phChart}>
+                    <defs>
+                      <linearGradient id="gSafe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.safe} stopOpacity={0.35} /><stop offset="100%" stopColor={C.safe} stopOpacity={0} /></linearGradient>
+                      <linearGradient id="gUnsafe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.unsafe} stopOpacity={0.35} /><stop offset="100%" stopColor={C.unsafe} stopOpacity={0} /></linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="ph" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Legend />
+                    <Area type="monotone" dataKey="Safe"   stroke={C.safe}   fill="url(#gSafe)"   strokeWidth={2} />
+                    <Area type="monotone" dataKey="Unsafe" stroke={C.unsafe} fill="url(#gUnsafe)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-6">
+                <h3 className="font-display font-semibold text-foreground mb-1">Water Safety Distribution</h3>
+                <p className="text-xs text-muted-foreground mb-4">Proportion of safe vs unsafe samples in the dataset</p>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={65} outerRadius={105} paddingAngle={4} dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}>
+                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [v.toLocaleString(), "Samples"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </motion.div>
+            </div>
+
+            {/* Row 2 — Feature Importance + Turbidity + Radar */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6">
+                <h3 className="font-display font-semibold text-foreground mb-1">Feature Importance</h3>
+                <p className="text-xs text-muted-foreground mb-4">Predictive weight of each parameter in the trained RF model</p>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={featureImportances} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={10} tickFormatter={v => `${v}%`} />
+                    <YAxis dataKey="param" type="category" stroke="hsl(var(--muted-foreground))" fontSize={10} width={90} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => [`${v}%`, "Importance"]} />
+                    <Bar dataKey="importance" fill={C.blue} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-6">
+                <h3 className="font-display font-semibold text-foreground mb-1">Turbidity Distribution</h3>
+                <p className="text-xs text-muted-foreground mb-4">Sample distribution by turbidity (NTU)</p>
+                <ResponsiveContainer width="100%" height={240}>
+                  <AreaChart data={turbChart}>
+                    <defs>
+                      <linearGradient id="gTS" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.safe} stopOpacity={0.3} /><stop offset="100%" stopColor={C.safe} stopOpacity={0} /></linearGradient>
+                      <linearGradient id="gTU" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={C.unsafe} stopOpacity={0.3} /><stop offset="100%" stopColor={C.unsafe} stopOpacity={0} /></linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="turbidity" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Area type="monotone" dataKey="Safe"   stroke={C.safe}   fill="url(#gTS)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="Unsafe" stroke={C.unsafe} fill="url(#gTU)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card p-6">
+                <h3 className="font-display font-semibold text-foreground mb-1">Parameter Profile</h3>
+                <p className="text-xs text-muted-foreground mb-4">Normalized mean values: Safe vs Unsafe water</p>
+                <ResponsiveContainer width="100%" height={240}>
+                  <RadarChart data={radarData}>
+                    <PolarGrid stroke="hsl(var(--border))" />
+                    <PolarAngleAxis dataKey="param" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                    <PolarRadiusAxis stroke="hsl(var(--border))" fontSize={9} domain={[0, 100]} />
+                    <Radar name="Safe"   dataKey="safe"   stroke={C.safe}   fill={C.safe}   fillOpacity={0.2} strokeWidth={2} />
+                    <Radar name="Unsafe" dataKey="unsafe" stroke={C.unsafe} fill={C.unsafe} fillOpacity={0.15} strokeWidth={2} />
+                    <Legend />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </motion.div>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 };
